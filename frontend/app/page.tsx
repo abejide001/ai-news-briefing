@@ -329,21 +329,25 @@ export default function HomePage() {
 function SummaryCard({ summary }: any) {
   return (
     <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 shadow-2xl backdrop-blur sm:p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <div className="shrink-0 rounded-2xl bg-blue-500/20 p-3 text-blue-300">
-          <Sparkles size={22} />
-        </div>
-        <div className="min-w-0">
-          <h2 className="text-xl font-bold sm:text-2xl">AI Summary</h2>
-          <p className="text-sm text-slate-400">
-            Generated from deduplicated stories
-          </p>
-        </div>
-      </div>
-
-      <div className="prose prose-invert max-w-none break-words text-sm leading-7 sm:text-base sm:leading-8">
+      <div className="prose prose-invert max-w-none break-words text-sm sm:text-base">
         <ReactMarkdown
           components={{
+            p: ({ children }) => (
+              <p className="mb-4 leading-7 sm:leading-8 text-slate-300">
+                {children}
+              </p>
+            ),
+            h3: ({ children }) => (
+              <h3 className="mt-6 mb-3 text-lg font-semibold text-white">
+                {children}
+              </h3>
+            ),
+            ul: ({ children }) => (
+              <ul className="mb-4 list-disc space-y-2 pl-5 text-slate-300">
+                {children}
+              </ul>
+            ),
+            li: ({ children }) => <li>{children}</li>,
             a: ({ href, children }) => (
               <a
                 href={href}
