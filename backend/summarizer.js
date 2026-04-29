@@ -45,13 +45,11 @@ STRICT RULES:
 
 Formatting:
 - Use clean Markdown
-- Embed links inline like: ([BBC](URL))
 - Keep it concise and structured
 
 For each source, return:
 - 3-5 bullet summary
 - key themes
-- links to read further
 
 Use only the article data provided.
 

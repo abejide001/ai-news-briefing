@@ -3,7 +3,7 @@ import express from "express";
 import cors from "cors";
 
 import { fetchAllNews } from "./news.js";
-import { deduplicateStories } from "./dedupe.js";
+import { deduplicateStories } from "./utils/dedupe.js";
 import { summarizeNews } from "./summarizer.js";
 import { connectRedis, redis } from "./redis.js";
 
