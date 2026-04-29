@@ -18,6 +18,7 @@ An AI-powered news aggregator that fetches top stories from multiple global outl
 ---
 
 ## 🏗️ Architecture
+
 Frontend (Next.js)
 ↓
 Backend API (Node.js / Express)
@@ -30,7 +31,6 @@ OpenAI Summarization
 ↓
 Redis Cache (performance + cost optimization)
 
-
 ---
 
 ## 🚀 Demo
@@ -38,6 +38,7 @@ Redis Cache (performance + cost optimization)
 ## 📦 Tech Stack
 
 ### Frontend
+
 - Next.js
 - Tailwind CSS
 - Framer Motion
@@ -45,6 +46,7 @@ Redis Cache (performance + cost optimization)
 - React Markdown
 
 ### Backend
+
 - Node.js
 - Express
 - OpenAI API
@@ -56,6 +58,7 @@ Redis Cache (performance + cost optimization)
 ## ⚙️ Setup
 
 ### 1. Clone the repo
+
 git clone https://github.com/your-username/ai-news-briefing.git
 
 cd ai-news-briefing
@@ -63,51 +66,52 @@ cd ai-news-briefing
 ---
 
 ### 2. Backend setup
+
 cd backend
+
 npm install
+
 Create `.env`:
+
 OPENAI_API_KEY=your_openai_key
 REDIS_URL=redis://localhost:6379
 CLIENT_URL=http://localhost:3000
 PORT=4000
+
 Run backend:
 npm run dev
 
 ---
 
 ### 3. Run Redis
+
 docker run --name news-redis -p 6379:6379 -d redis:7
 
 ---
+
 ### 4. Frontend setup
+
 cd ../frontend
+
 npm install
+
 Create `.env.local`:
+
 NEXT_PUBLIC_NEWS_API_URL=http://localhost:4000/api/news
+
 Run frontend:
 npm run dev
 
 ---
 
 #### Example
+
 curl "http://localhost:4000/api/news?limit=5"
 
 ---
 
-## 🧠 Deduplication StrategyStories are grouped using:- Title normalization- String similarity matching- Threshold-based clusteringThis ensures multiple outlets reporting the same story are merged into one.
-
----
-
-## ⚡ Caching Strategy- Redis used to cache responses- TTL-based invalidation- Optional manual refresh via `refresh=true`
-Cache Key: news:<limit>:<threshold>:<ai>
-
----
-
-## 📱 UI Highlights- Responsive grid layout- Source badges with branding- Animated story cards- Search + filtering- Markdown-rendered summaries
-
----
-
 ## 🧪 Testing
+
 npm test
 Uses:- Vitest
 
@@ -120,6 +124,7 @@ MIT
 ---
 
 ## 🙌 Author
+
 Femi Abejide
 
 Built with ❤️ — production-grade AI + full-stack system 🚀
