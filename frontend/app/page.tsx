@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { motion } from "framer-motion";
 import {
   Newspaper,
@@ -331,6 +332,7 @@ function SummaryCard({ summary }: any) {
     <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 shadow-2xl backdrop-blur sm:p-6">
       <div className="prose prose-invert max-w-none break-words text-sm sm:text-base">
         <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
           components={{
             p: ({ children }) => (
               <p className="mb-4 leading-7 sm:leading-8 text-slate-300">
