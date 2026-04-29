@@ -13,6 +13,12 @@ import {
   Search,
 } from "lucide-react";
 
+type SourceName = keyof typeof SOURCE_META;
+
+type SourceBadgeProps = {
+  source: string;
+};
+
 const SOURCE_META = {
   BBC: {
     label: "BBC",
@@ -55,8 +61,8 @@ const SOURCE_META = {
     logo: "DW",
   },
 };
-function SourceBadge({ source }) {
-  const meta = SOURCE_META[source] || {
+function SourceBadge({ source }: SourceBadgeProps) {
+  const meta = SOURCE_META[source as SourceName] || {
     label: source,
     color: "bg-white/10 text-slate-300",
     logo: source?.slice(0, 2)?.toUpperCase() || "?",
@@ -76,7 +82,7 @@ function SourceBadge({ source }) {
 }
 
 export default function HomePage() {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<any>(null);
   const [limit, setLimit] = useState(5);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [refreshCache, setRefreshCache] = useState(false);
@@ -109,7 +115,7 @@ export default function HomePage() {
 
       const result = await response.json();
       setData(result);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
@@ -122,7 +128,7 @@ export default function HomePage() {
 
   const sources = useMemo(() => {
     const allSources =
-      data?.stories?.flatMap((story) => story.sources || []) || [];
+      data?.stories?.flatMap((story: any) => story.sources || []) || [];
 
     return ["All", ...new Set(allSources)];
   }, [data]);
@@ -131,15 +137,15 @@ export default function HomePage() {
     const stories = data?.stories || [];
     const query = search.trim().toLowerCase();
 
-    return stories.filter((story) => {
+    return stories.filter((story: any) => {
       const matchesSource =
         selectedSource === "All" || story.sources?.includes(selectedSource);
 
       const searchableText = [
         story.title,
         ...(story.sources || []),
-        ...(story.links || []).map((link) => link.title),
-        ...(story.links || []).map((link) => link.source),
+        ...(story.links || []).map((link: any) => link.title),
+        ...(story.links || []).map((link: any) => link.source),
       ]
         .filter(Boolean)
         .join(" ")
@@ -281,7 +287,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:pb-0">
-                  {sources.map((source) => (
+                  {sources.map((source: any) => (
                     <button
                       key={source}
                       onClick={() => setSelectedSource(source)}
@@ -303,7 +309,7 @@ export default function HomePage() {
                 </div>
               ) : (
                 <div className="grid gap-5 lg:grid-cols-2">
-                  {filteredStories.map((story, index) => (
+                  {filteredStories.map((story: any, index: any) => (
                     <StoryCard
                       key={`${story.title}-${index}`}
                       story={story}
@@ -320,7 +326,7 @@ export default function HomePage() {
   );
 }
 
-function SummaryCard({ summary }) {
+function SummaryCard({ summary }: any) {
   return (
     <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 shadow-2xl backdrop-blur sm:p-6">
       <div className="mb-4 flex items-center gap-3">
@@ -357,7 +363,7 @@ function SummaryCard({ summary }) {
   );
 }
 
-function StoryCard({ story, index }) {
+function StoryCard({ story, index }: any) {
   return (
     <motion.article
       initial={{ opacity: 0, y: 14 }}
@@ -370,13 +376,13 @@ function StoryCard({ story, index }) {
       </h3>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {story.sources?.map((source) => (
+        {story.sources?.map((source: any) => (
           <SourceBadge key={source} source={source} />
         ))}
       </div>
 
       <div className="mt-5 space-y-3">
-        {story.links?.map((item, linkIndex) => (
+        {story.links?.map((item: any, linkIndex: any) => (
           <a
             key={`${item.link}-${linkIndex}`}
             href={item.link}
