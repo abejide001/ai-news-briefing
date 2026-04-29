@@ -13,8 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI-powered news briefing",
-  description: "Today's top stories, summarized",
+  title: "AI News Briefing – Smart Aggregated Global News",
+  description:
+    "AI-powered news briefing that aggregates global news sources, removes duplicate stories, and delivers concise summaries with direct links to original articles.",
 };
 
 export default function RootLayout({
