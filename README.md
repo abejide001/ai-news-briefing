@@ -20,15 +20,25 @@ An AI-powered news aggregator that fetches top stories from multiple global outl
 ## 🏗️ Architecture
 
 Frontend (Next.js)
+
 ↓
+
 Backend API (Node.js / Express)
+
 ↓
+
 News Sources (RSS feeds)
+
 ↓
+
 Deduplication Engine
+
 ↓
+
 OpenAI Summarization
+
 ↓
+
 Redis Cache (performance + cost optimization)
 
 ---
@@ -74,11 +84,15 @@ npm install
 Create `.env`:
 
 OPENAI_API_KEY=your_openai_key
+
 REDIS_URL=redis://localhost:6379
+
 CLIENT_URL=http://localhost:3000
+
 PORT=4000
 
 Run backend:
+
 npm run dev
 
 ---
@@ -100,6 +114,7 @@ Create `.env.local`:
 NEXT_PUBLIC_NEWS_API_URL=http://localhost:4000/api/news
 
 Run frontend:
+
 npm run dev
 
 ---
@@ -113,7 +128,6 @@ curl "http://localhost:4000/api/news?limit=5"
 ## 🧪 Testing
 
 npm test
-Uses:- Vitest
 
 ---
 
@@ -126,5 +140,3 @@ MIT
 ## 🙌 Author
 
 Femi Abejide
-
-Built with ❤️ — production-grade AI + full-stack system 🚀
