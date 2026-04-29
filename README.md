@@ -72,6 +72,7 @@ CLIENT_URL=http://localhost:3000
 PORT=4000
 Run backend:
 npm run dev
+
 ---
 
 ### 3. Run Redis
@@ -85,9 +86,10 @@ Create `.env.local`:
 NEXT_PUBLIC_NEWS_API_URL=http://localhost:4000/api/news
 Run frontend:
 npm run dev
+
 ---
 
-## 🔌 API### `GET /api/news`Fetch news briefing.#### Query params| Param       | Description                     | Default ||------------|---------------------------------|---------|| `limit`     | Articles per source             | 5       || `threshold` | Deduplication similarity        | 0.55    || `ai`        | Enable AI summary               | true    || `refresh`   | Force cache refresh             | false   |#### Example
+#### Example
 curl "http://localhost:4000/api/news?limit=5"
 
 ---
