@@ -45,6 +45,8 @@ Redis Cache (performance + cost optimization)
 
 ## 🚀 Demo
 
+https://ai-news-briefing-ok98.vercel.app
+
 ## 📦 Tech Stack
 
 ### Frontend
