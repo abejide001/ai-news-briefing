@@ -13,12 +13,9 @@ import {
   Search,
   Moon,
   Sun,
-  Newspaper,
-  Clock,
 } from "lucide-react";
 import { LoadingSkeleton } from "./loadingSkeletion";
 import { BriefingAudioControls } from "./briefingAudioControls";
-import { formatGeneratedAt } from "@/lib/formatGeneratedAt";
 
 type NewsLink = {
   source: string;
@@ -161,48 +158,17 @@ export default function HomePage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-100 px-4 py-6 text-slate-950 transition-colors dark:bg-[radial-gradient(circle_at_top,_#1e293b,_#020617_45%)] dark:text-white sm:px-6 sm:py-8">
       <div className="mx-auto max-w-6xl">
-        <header className="mb-10">
-          <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-sm text-blue-100 backdrop-blur">
-            <Sparkles size={16} />
-            AI-powered daily news briefing
+        <header className="mb-8 sm:mb-10">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <ThemeToggle />
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[1.4fr_0.8fr] lg:items-end">
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
+          <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr] lg:items-end">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl">
                 Today’s top stories, summarized.
               </h1>
             </div>
-
-            <div className="bg-background border border-border rounded-xl p-5 flex flex-col gap-3 transition-colors hover:border-border/70">
-
-  {/* Header */}
-  <div className="flex items-start gap-3">
-    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 bg-blue-50 dark:bg-blue-950">
-      <Newspaper size={16} className="text-blue-600 dark:text-blue-400" />
-    </div>
-
-    <div className="flex-1 min-w-0">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground mb-0.5">
-        Briefing status
-      </p>
-      <p className="text-sm font-medium">Today's briefing</p>
-    </div>
-  </div>
-
-
-  <div className="h-px bg-border" />
-
-
-  {data?.generatedAt && (
-    <div className="flex items-center gap-1.5">
-      <Clock size={13} className="text-muted-foreground shrink-0" />
-      <span className="text-xs text-muted-foreground">
-        {formatGeneratedAt(data.generatedAt)}
-      </span>
-    </div>
-  )}
-</div>
           </div>
         </header>
 
