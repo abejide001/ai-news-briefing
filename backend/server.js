@@ -1,16 +1,23 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import rateLimit from "express-rate-limit";
 
 import { fetchAllNews } from "./news.js";
 import { deduplicateStories } from "./utils/dedupe.js";
-import { summarizeNews } from "./summarizer.js";
+import { generateBriefing } from "./briefingEngine.js";
 import { connectRedis, redis } from "./redis.js";
 
 const app = express();
 const PORT = process.env.PORT || 4000;
 const CACHE_TTL_SECONDS = Number(process.env.CACHE_TTL_SECONDS || 1800);
 
+const limiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+});
+
+app.use("/api/", limiter);
 app.use(
   cors({
     origin: process.env.CLIENT_URL || "http://localhost:3000",
@@ -61,7 +68,7 @@ app.get("/api/news", async (req, res) => {
     const newsBySource = await fetchAllNews(limit);
     const stories = deduplicateStories(newsBySource, threshold);
 
-    let summary = await summarizeNews(stories);
+    let summary = await generateBriefing(stories);
 
     const payload = {
       generatedAt: new Date().toISOString(),

@@ -8,7 +8,7 @@ function stripHtml(html = "") {
   return html.replace(/<[^>]*>?/gm, "").trim();
 }
 
-export async function summarizeNews(newsBySource) {
+export async function generateBriefing(newsBySource) {
   const input = newsBySource
     .map((source) => {
       const articles = source.articles

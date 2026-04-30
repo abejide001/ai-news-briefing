@@ -1,34 +1,52 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "AI News Briefing – Smart Aggregated Global News",
+  title: "AI News Briefing",
   description:
-    "AI-powered news briefing that aggregates global news sources, removes duplicate stories, and delivers concise summaries with direct links to original articles.",
+    "AI-powered news briefing that aggregates, deduplicates, and summarizes global news.",
+
+  openGraph: {
+    title: "AI News Briefing",
+    description:
+      "Get concise AI-powered summaries from top global news sources.",
+    url: "https://ai-news-briefing-ok98.vercel.app",
+    siteName: "AI News Briefing",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "AI News Briefing preview",
+      },
+    ],
+    type: "website",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title: "AI News Briefing",
+    description:
+      "Get concise AI-powered summaries from top global news sources.",
+    images: ["/og-image.png"],
+  },
+
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en" suppressHydrationWarning>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

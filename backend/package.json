@@ -1,8 +1,8 @@
 {
   "name": "ai-news-briefing-api",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "AI-powered news briefing platform that aggregates and deduplicates global news sources, generating concise daily summaries using OpenAI, with a performant Node.js backend and a responsive Next.js frontend.",
+  "main": "server.js",
   "scripts": {
     "test": "vitest",
     "dev": "node --watch server.js",
@@ -17,13 +17,13 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.4.1",
     "marked": "^18.0.2",
     "openai": "^6.35.0",
     "puppeteer": "^24.42.0",
     "redis": "^5.12.1",
     "rss-parser": "^3.13.0",
-    "string-similarity": "^4.0.4",
-    "yargs": "^18.0.0"
+    "string-similarity": "^4.0.4"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.7.10",

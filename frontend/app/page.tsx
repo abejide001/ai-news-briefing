@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
 import {
   Newspaper,
   RefreshCw,
@@ -12,78 +13,61 @@ import {
   Sparkles,
   Clock,
   Search,
+  Moon,
+  Sun,
 } from "lucide-react";
 
-type SourceName = keyof typeof SOURCE_META;
-
-type SourceBadgeProps = {
+type NewsLink = {
   source: string;
+  title: string;
+  link: string;
+};
+
+type Story = {
+  title: string;
+  sources?: string[];
+  links?: NewsLink[];
+};
+
+type NewsResponse = {
+  summary: string;
+  stories?: Story[];
+  cached?: boolean;
+  generatedAt?: string;
 };
 
 const SOURCE_META = {
   BBC: {
     label: "BBC",
-    color: "bg-red-600 text-white",
-    logo: "BBC",
+    color: "bg-white text-black",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/4/41/BBC_Logo_2021.svg",
   },
   CNN: {
     label: "CNN",
-    color: "bg-red-500 text-white",
-    logo: "CNN",
+    color: "bg-white",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/b/b1/CNN.svg",
   },
   "Sky News": {
     label: "Sky News",
-    color: "bg-blue-600 text-white",
-    logo: "SKY",
+    color: "bg-white",
+    logo: "https://upload.wikimedia.org/wikipedia/en/archive/5/57/20231116033322%21Sky_News_logo.svg",
   },
   "Al Jazeera": {
     label: "Al Jazeera",
-    color: "bg-yellow-500 text-black",
-    logo: "AJ",
-  },
-  Reuters: {
-    label: "Reuters",
-    color: "bg-orange-500 text-white",
-    logo: "R",
-  },
-  "The Guardian": {
-    label: "The Guardian",
-    color: "bg-indigo-700 text-white",
-    logo: "G",
-  },
-  "Associated Press": {
-    label: "Associated Press",
-    color: "bg-gray-800 text-white",
-    logo: "AP",
+    color: "bg-white",
+    logo: "https://upload.wikimedia.org/wikipedia/en/f/f2/Aljazeera_eng.svg",
   },
   "Deutsche Welle": {
-    label: "Deutsche Welle",
-    color: "bg-blue-800 text-white",
-    logo: "DW",
+    label: "DW",
+    color: "bg-white",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Deutsche_Welle_Logo.svg",
   },
-};
-function SourceBadge({ source }: SourceBadgeProps) {
-  const meta = SOURCE_META[source as SourceName] || {
-    label: source,
-    color: "bg-white/10 text-slate-300",
-    logo: source?.slice(0, 2)?.toUpperCase() || "?",
-  };
+} as const;
 
-  return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${meta.color}`}
-      title={meta.label}
-    >
-      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-[10px] font-black leading-none">
-        {meta.logo}
-      </span>
-      <span>{meta.label}</span>
-    </span>
-  );
-}
+type SourceName = keyof typeof SOURCE_META;
 
 export default function HomePage() {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<NewsResponse | null>(null);
   const [limit, setLimit] = useState(5);
   const [aiEnabled, setAiEnabled] = useState(true);
   const [refreshCache, setRefreshCache] = useState(false);
@@ -98,6 +82,10 @@ export default function HomePage() {
       setError("");
 
       const apiUrl = process.env.NEXT_PUBLIC_NEWS_API_URL;
+
+      if (!apiUrl) {
+        throw new Error("Missing NEXT_PUBLIC_NEWS_API_URL");
+      }
 
       const params = new URLSearchParams({
         limit: String(limit),
@@ -116,8 +104,8 @@ export default function HomePage() {
 
       const result = await response.json();
       setData(result);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
@@ -129,7 +117,7 @@ export default function HomePage() {
 
   const sources = useMemo(() => {
     const allSources =
-      data?.stories?.flatMap((story: any) => story.sources || []) || [];
+      data?.stories?.flatMap((story) => story.sources || []) || [];
 
     return ["All", ...new Set(allSources)];
   }, [data]);
@@ -138,15 +126,15 @@ export default function HomePage() {
     const stories = data?.stories || [];
     const query = search.trim().toLowerCase();
 
-    return stories.filter((story: any) => {
+    return stories.filter((story) => {
       const matchesSource =
         selectedSource === "All" || story.sources?.includes(selectedSource);
 
       const searchableText = [
         story.title,
         ...(story.sources || []),
-        ...(story.links || []).map((link: any) => link.title),
-        ...(story.links || []).map((link: any) => link.source),
+        ...(story.links || []).map((link) => link.title),
+        ...(story.links || []).map((link) => link.source),
       ]
         .filter(Boolean)
         .join(" ")
@@ -159,12 +147,11 @@ export default function HomePage() {
   }, [data, selectedSource, search]);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,_#1e3a8a,_#020617_45%)] px-4 py-6 text-white sm:px-6 sm:py-8">
+    <main className="min-h-screen overflow-x-hidden bg-slate-100 px-4 py-6 text-slate-950 transition-colors dark:bg-[radial-gradient(circle_at_top,_#1e293b,_#020617_45%)] dark:text-white sm:px-6 sm:py-8">
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 sm:mb-10">
-          <div className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs text-blue-100 backdrop-blur sm:text-sm">
-            <Sparkles size={16} className="shrink-0" />
-            <span className="truncate">AI-powered daily news briefing</span>
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <ThemeToggle />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr] lg:items-end">
@@ -172,40 +159,14 @@ export default function HomePage() {
               <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-6xl">
                 Today’s top stories, summarized.
               </h1>
-
-              <p className="mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:mt-5 sm:text-lg sm:leading-8">
-                Fetches news from multiple outlets, deduplicates overlapping
-                stories, and generates a concise AI briefing with source links.
-              </p>
-            </div>
-
-            <div className="rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur sm:p-5">
-              <div className="flex items-center gap-3">
-                <Newspaper className="shrink-0 text-blue-300" />
-                <div className="min-w-0">
-                  <p className="text-sm text-slate-300">Briefing status</p>
-                  <p className="truncate font-semibold">
-                    {data?.cached ? "Loaded from cache" : "Fresh briefing"}
-                  </p>
-                </div>
-              </div>
-
-              {data?.generatedAt && (
-                <div className="mt-4 flex items-center gap-2 text-sm text-slate-300">
-                  <Clock size={16} className="shrink-0" />
-                  <span className="break-words">
-                    {new Date(data.generatedAt).toLocaleString()}
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </header>
 
-        <section className="mb-8 rounded-3xl border border-white/10 bg-white/10 p-4 shadow-2xl backdrop-blur sm:p-5">
+        <section className="mb-8 rounded-3xl border border-slate-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-white/10 dark:shadow-2xl dark:backdrop-blur sm:p-5">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[180px_1fr_auto] lg:items-end">
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm text-slate-600 dark:text-slate-300">
                 Articles per source
               </label>
               <input
@@ -214,21 +175,21 @@ export default function HomePage() {
                 max="20"
                 value={limit}
                 onChange={(e) => setLimit(Number(e.target.value))}
-                className="w-full rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3 outline-none focus:border-blue-400"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 outline-none focus:border-blue-500 dark:border-white/10 dark:bg-slate-950/70 dark:focus:border-blue-400"
               />
             </div>
 
             <div>
-              <label className="mb-2 block text-sm text-slate-300">
+              <label className="mb-2 block text-sm text-slate-600 dark:text-slate-300">
                 Search stories
               </label>
-              <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/70 px-4 py-3">
+              <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-950/70">
                 <Search size={18} className="shrink-0 text-slate-400" />
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search headlines..."
-                  className="min-w-0 w-full bg-transparent outline-none placeholder:text-slate-500"
+                  className="min-w-0 w-full bg-transparent outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -236,36 +197,18 @@ export default function HomePage() {
             <button
               onClick={fetchNews}
               disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 font-semibold shadow-lg shadow-blue-950/40 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 lg:col-span-1 lg:w-auto"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-blue-950/20 transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60 sm:col-span-2 lg:col-span-1 lg:w-auto"
             >
               <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
               {loading ? "Loading..." : "Refresh"}
             </button>
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={aiEnabled}
-                onChange={(e) => setAiEnabled(e.target.checked)}
-              />
-              AI summary
-            </label>
-
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-300">
-              <input
-                type="checkbox"
-                checked={refreshCache}
-                onChange={(e) => setRefreshCache(e.target.checked)}
-              />
-              Force refresh cache
-            </label>
-          </div>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4"></div>
         </section>
 
         {error && (
-          <div className="mb-8 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-950/50 p-4 text-sm text-red-100 sm:p-5 sm:text-base">
+          <div className="mb-8 flex items-start gap-3 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-700 dark:border-red-500/30 dark:bg-red-950/50 dark:text-red-100 sm:p-5 sm:text-base">
             <AlertCircle className="shrink-0" />
             <span className="break-words">{error}</span>
           </div>
@@ -281,21 +224,21 @@ export default function HomePage() {
               <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <h2 className="text-2xl font-bold">Story groups</h2>
-                  <p className="text-sm text-slate-400 sm:text-base">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
                     {filteredStories.length} of {data.stories?.length || 0}{" "}
                     stories shown
                   </p>
                 </div>
 
                 <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:pb-0">
-                  {sources.map((source: any) => (
+                  {sources.map((source) => (
                     <button
                       key={source}
                       onClick={() => setSelectedSource(source)}
                       className={`shrink-0 rounded-full px-4 py-2 text-sm transition ${
                         selectedSource === source
-                          ? "bg-blue-500 text-white"
-                          : "bg-white/10 text-slate-300 hover:bg-white/20"
+                          ? "bg-blue-600 text-white"
+                          : "bg-white text-slate-600 shadow-sm hover:bg-slate-50 dark:bg-white/10 dark:text-slate-300 dark:hover:bg-white/20"
                       }`}
                     >
                       {source}
@@ -305,12 +248,12 @@ export default function HomePage() {
               </div>
 
               {filteredStories.length === 0 ? (
-                <div className="rounded-3xl border border-white/10 bg-white/10 p-6 text-slate-300 backdrop-blur">
+                <div className="rounded-3xl border border-slate-200 bg-white p-6 text-slate-600 shadow-xl dark:border-white/10 dark:bg-white/10 dark:text-slate-300 dark:backdrop-blur">
                   No stories match your search.
                 </div>
               ) : (
                 <div className="grid gap-5 lg:grid-cols-2">
-                  {filteredStories.map((story: any, index: any) => (
+                  {filteredStories.map((story, index) => (
                     <StoryCard
                       key={`${story.title}-${index}`}
                       story={story}
@@ -327,35 +270,84 @@ export default function HomePage() {
   );
 }
 
-function SummaryCard({ summary }: any) {
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return (
+      <button className="h-10 w-24 rounded-full border border-slate-200 bg-white dark:border-white/10 dark:bg-white/10" />
+    );
+  }
+
+  const isDark = resolvedTheme === "dark";
+
   return (
-    <section className="rounded-3xl border border-white/10 bg-slate-950/60 p-4 shadow-2xl backdrop-blur sm:p-6">
-      <div className="prose prose-invert max-w-none break-words text-sm sm:text-base">
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      className="inline-flex shrink-0 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 dark:border-white/10 dark:bg-white/10 dark:text-white dark:backdrop-blur dark:hover:bg-white/20"
+    >
+      {isDark ? <Sun size={16} /> : <Moon size={16} />}
+      <span className="hidden sm:inline">{isDark ? "Light" : "Dark"}</span>
+    </button>
+  );
+}
+
+function SummaryCard({ summary }: { summary: string }) {
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-xl dark:border-white/10 dark:bg-slate-950/60 dark:shadow-2xl dark:backdrop-blur sm:p-6">
+      <div className="mb-4 flex items-center gap-3">
+        <div className="shrink-0 rounded-2xl bg-blue-100 p-3 text-blue-600 dark:bg-blue-500/20 dark:text-blue-300">
+          <Sparkles size={22} />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-xl font-bold sm:text-2xl">AI Summary</h2>
+        </div>
+      </div>
+
+      <div className="space-y-6 text-base leading-8 text-slate-700 dark:text-slate-300 sm:text-lg sm:leading-9">
         <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+          remarkPlugins={[remarkGfm]}
           components={{
-            p: ({ children }) => (
-              <p className="mb-4 leading-7 sm:leading-8 text-slate-300">
+            h2: ({ children }) => (
+              <h2 className="mt-8 text-2xl font-bold text-slate-950 dark:text-white">
                 {children}
-              </p>
+              </h2>
             ),
             h3: ({ children }) => (
-              <h3 className="mt-6 mb-3 text-lg font-semibold text-white">
+              <h3 className="mt-8 text-xl font-bold text-slate-950 dark:text-white">
                 {children}
               </h3>
             ),
-            ul: ({ children }) => (
-              <ul className="mb-4 list-disc space-y-2 pl-5 text-slate-300">
+            p: ({ children }) => (
+              <p className="mb-6 max-w-4xl leading-8 sm:leading-9">
                 {children}
-              </ul>
+              </p>
             ),
-            li: ({ children }) => <li>{children}</li>,
+            ul: ({ children }) => (
+              <ul className="mb-8 list-disc space-y-4 pl-6">{children}</ul>
+            ),
+            li: ({ children }) => (
+              <li className="pl-2 leading-8 sm:leading-9">{children}</li>
+            ),
+            strong: ({ children }) => (
+              <strong className="font-semibold text-slate-950 dark:text-white">
+                {children}
+              </strong>
+            ),
+            hr: () => (
+              <hr className="my-8 border-slate-200 dark:border-white/20" />
+            ),
             a: ({ href, children }) => (
               <a
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-300 underline underline-offset-4 hover:text-blue-200"
+                className="font-medium text-blue-600 underline underline-offset-4 hover:text-blue-500 dark:text-blue-300 dark:hover:text-blue-200"
               >
                 {children}
               </a>
@@ -369,32 +361,32 @@ function SummaryCard({ summary }: any) {
   );
 }
 
-function StoryCard({ story, index }: any) {
+function StoryCard({ story, index }: { story: Story; index: number }) {
   return (
     <motion.article
       initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04 }}
-      className="min-w-0 rounded-3xl border border-white/10 bg-white/10 p-4 shadow-xl backdrop-blur transition hover:-translate-y-1 hover:bg-white/[0.13] sm:p-5"
+      className="min-w-0 rounded-3xl border border-slate-200 bg-white p-4 shadow-xl transition hover:-translate-y-1 hover:bg-slate-50 dark:border-white/10 dark:bg-white/10 dark:backdrop-blur dark:hover:bg-white/[0.13] sm:p-5"
     >
       <h3 className="break-words text-lg font-semibold leading-7 sm:text-xl">
         {story.title}
       </h3>
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {story.sources?.map((source: any) => (
+        {story.sources?.map((source) => (
           <SourceBadge key={source} source={source} />
         ))}
       </div>
 
       <div className="mt-5 space-y-3">
-        {story.links?.map((item: any, linkIndex: any) => (
+        {story.links?.map((item, linkIndex) => (
           <a
             key={`${item.link}-${linkIndex}`}
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex min-w-0 items-start justify-between gap-3 rounded-2xl border border-white/10 bg-slate-950/50 px-4 py-3 text-sm text-slate-300 transition hover:border-blue-400/40 hover:bg-blue-500/10 hover:text-white"
+            className="group flex min-w-0 items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-300 dark:hover:border-blue-400/40 dark:hover:bg-blue-500/10 dark:hover:text-white"
           >
             <div className="min-w-0">
               <div className="mb-2">
@@ -406,7 +398,7 @@ function StoryCard({ story, index }: any) {
 
             <ExternalLink
               size={16}
-              className="mt-1 shrink-0 text-slate-500 transition group-hover:text-blue-300"
+              className="mt-1 shrink-0 text-slate-400 transition group-hover:text-blue-600 dark:text-slate-500 dark:group-hover:text-blue-300"
             />
           </a>
         ))}
@@ -415,16 +407,45 @@ function StoryCard({ story, index }: any) {
   );
 }
 
+function SourceBadge({ source }: { source: string }) {
+  const meta = SOURCE_META[source as SourceName] || {
+    label: source,
+    color: "bg-slate-200 text-slate-800 dark:bg-white/10 dark:text-slate-300",
+    logo: null,
+  };
+
+  return (
+    <span
+      className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${meta.color}`}
+      title={meta.label}
+    >
+      {meta.logo ? (
+        <img
+          src={meta.logo}
+          alt={meta.label}
+          className="h-4 w-auto object-contain"
+        />
+      ) : (
+        <span className="text-[10px] font-bold">
+          {/* {meta.label.slice(0, 2).toUpperCase()} */}
+        </span>
+      )}
+
+      <span>{meta.label}</span>
+    </span>
+  );
+}
+
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
-      <div className="h-56 animate-pulse rounded-3xl bg-white/10 sm:h-64" />
+      <div className="h-56 animate-pulse rounded-3xl bg-white shadow-xl dark:bg-white/10 sm:h-64" />
 
       <div className="grid gap-5 lg:grid-cols-2">
         {Array.from({ length: 4 }).map((_, index) => (
           <div
             key={index}
-            className="h-52 animate-pulse rounded-3xl bg-white/10 sm:h-56"
+            className="h-52 animate-pulse rounded-3xl bg-white shadow-xl dark:bg-white/10 sm:h-56"
           />
         ))}
       </div>
