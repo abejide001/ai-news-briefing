@@ -47,29 +47,39 @@ function getReadingTime(text: string) {
 
 const SOURCE_META = {
   BBC: {
-    label: "BBC",
+    label: "",
     color: "bg-white text-black",
     logo: "https://upload.wikimedia.org/wikipedia/commons/4/41/BBC_Logo_2021.svg",
   },
   CNN: {
-    label: "CNN",
-    color: "bg-white",
+    label: "",
+    color: "",
     logo: "https://upload.wikimedia.org/wikipedia/commons/b/b1/CNN.svg",
   },
   "Sky News": {
-    label: "Sky News",
+    label: "",
     color: "bg-white",
     logo: "https://upload.wikimedia.org/wikipedia/en/archive/5/57/20231116033322%21Sky_News_logo.svg",
   },
   "Al Jazeera": {
-    label: "Al Jazeera",
-    color: "bg-white",
+    label: "",
+    color: "",
     logo: "https://upload.wikimedia.org/wikipedia/en/f/f2/Aljazeera_eng.svg",
   },
   "Deutsche Welle": {
-    label: "DW",
+    label: "",
     color: "bg-white",
     logo: "https://upload.wikimedia.org/wikipedia/commons/6/69/Deutsche_Welle_Logo.svg",
+  },
+  France24: {
+    label: "France24",
+    color: "",
+    logo: "https://upload.wikimedia.org/wikipedia/de/6/65/FRANCE_24_logo.svg",
+  },
+  "The Guardian": {
+    label: "",
+    color: "bg-white",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/7/75/The_Guardian_2018.svg",
   },
 } as const;
 
@@ -406,10 +416,6 @@ function StoryCard({ story, index }: { story: Story; index: number }) {
             className="group flex min-w-0 items-start justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-slate-950/50 dark:text-slate-300 dark:hover:border-blue-400/40 dark:hover:bg-blue-500/10 dark:hover:text-white"
           >
             <div className="min-w-0">
-              <div className="mb-2">
-                <SourceBadge source={item.source} />
-              </div>
-
               <span className="block break-words">{item.title}</span>
             </div>
 

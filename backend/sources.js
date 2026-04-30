@@ -8,8 +8,8 @@ export const NEWS_SOURCES = [
     feedUrl: "https://feeds.skynews.com/feeds/rss/world.xml",
   },
   {
-    name: "Associated Press",
-    feedUrl: "https://apnews.com/hub/ap-top-news?utm_source=rss",
+    name: "France24",
+    feedUrl: "https://www.france24.com/en/rss",
   },
   {
     name: "CNN",
@@ -22,5 +22,9 @@ export const NEWS_SOURCES = [
   {
     name: "Deutsche Welle",
     feedUrl: "https://rss.dw.com/xml/rss-en-all",
+  },
+  {
+    name: "The Guardian",
+    feedUrl: "https://www.theguardian.com/uk/rss",
   },
 ];
