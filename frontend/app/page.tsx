@@ -6,16 +6,16 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useTheme } from "next-themes";
 import {
-  Newspaper,
   RefreshCw,
   ExternalLink,
   AlertCircle,
   Sparkles,
-  Clock,
   Search,
   Moon,
   Sun,
 } from "lucide-react";
+import { LoadingSkeleton } from "./loadingSkeletion";
+import { BriefingAudioControls } from "./briefingAudioControls";
 
 type NewsLink = {
   source: string;
@@ -308,7 +308,7 @@ function SummaryCard({ summary }: { summary: string }) {
           <h2 className="text-xl font-bold sm:text-2xl">AI Summary</h2>
         </div>
       </div>
-
+      <BriefingAudioControls text={summary} />
       <div className="space-y-6 text-base leading-8 text-slate-700 dark:text-slate-300 sm:text-lg sm:leading-9">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
@@ -433,22 +433,5 @@ function SourceBadge({ source }: { source: string }) {
 
       <span>{meta.label}</span>
     </span>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="h-56 animate-pulse rounded-3xl bg-white shadow-xl dark:bg-white/10 sm:h-64" />
-
-      <div className="grid gap-5 lg:grid-cols-2">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <div
-            key={index}
-            className="h-52 animate-pulse rounded-3xl bg-white shadow-xl dark:bg-white/10 sm:h-56"
-          />
-        ))}
-      </div>
-    </div>
   );
 }
