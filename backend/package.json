@@ -2,11 +2,11 @@
   "name": "ai-news-briefing-api",
   "version": "1.0.0",
   "description": "AI-powered news briefing platform that aggregates and deduplicates global news sources, generating concise daily summaries using OpenAI, with a performant Node.js backend and a responsive Next.js frontend.",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "test": "vitest",
-    "dev": "node --watch server.js",
-    "start": "node server.js"
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
   },
   "keywords": [],
   "author": "",

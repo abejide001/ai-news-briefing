@@ -4,13 +4,15 @@ const parseURLMock = vi.fn();
 
 vi.mock("rss-parser", () => {
   return {
-    default: vi.fn().mockImplementation(() => ({
+    default: vi.fn().mockImplementation(function ParserMock() {
+      return {
       parseURL: parseURLMock,
-    })),
+      };
+    }),
   };
 });
 
-const { fetchNewsFromSource } = await import("./news.js");
+const { fetchNewsFromSource } = await import("../src/news/fetchNews.js");
 
 describe("fetchNewsFromSource", () => {
   it("fetches and normalizes RSS articles", async () => {

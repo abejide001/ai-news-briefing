@@ -1,6 +1,6 @@
 import Parser from "rss-parser";
-import { NEWS_SOURCES } from "./sources.js";
-import { cleanText, extractHref } from "./utils/cleanText.js";
+import { NEWS_SOURCES } from "../config/sources.js";
+import { cleanText, extractHref } from "../utils/text.js";
 
 const parser = new Parser({
   headers: {

@@ -1,11 +1,14 @@
 import OpenAI from "openai";
+import { stripHtml } from "../utils/text.js";
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let client;
 
-function stripHtml(html = "") {
-  return html.replace(/<[^>]*>?/gm, "").trim();
+function getOpenAIClient() {
+  client ??= new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  return client;
 }
 
 export async function generateBriefing(newsBySource) {
@@ -30,7 +33,7 @@ ${articles || "No articles found."}
     })
     .join("\n---\n");
 
-  const response = await client.responses.create({
+  const response = await getOpenAIClient().responses.create({
     model: "gpt-4.1-mini",
     input: `
 You are a news assistant.

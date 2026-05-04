@@ -1,43 +1,18 @@
-import "dotenv/config";
-import express from "express";
-import cors from "cors";
-import rateLimit from "express-rate-limit";
+import { Router } from "express";
+import { generateBriefing } from "../briefing/generateBriefing.js";
+import { redis } from "../lib/redis.js";
+import { deduplicateStories } from "../news/deduplicateStories.js";
+import { fetchAllNews } from "../news/fetchNews.js";
 
-import { fetchAllNews } from "./news.js";
-import { deduplicateStories } from "./utils/dedupe.js";
-import { generateBriefing } from "./briefingEngine.js";
-import { connectRedis, redis } from "./redis.js";
-
-const app = express();
-const PORT = process.env.PORT || 4000;
 const CACHE_TTL_SECONDS = Number(process.env.CACHE_TTL_SECONDS || 1800);
 
-const limiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 10,
-});
-
-app.use("/api/", limiter);
-app.use(
-  cors({
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-  })
-);
-
-app.use(express.json());
+export const newsRouter = Router();
 
 function getCacheKey({ limit, threshold }) {
   return `news:${limit}:${threshold}`;
 }
 
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
-    service: "ai-news-briefing-api",
-  });
-});
-
-app.get("/api/news", async (req, res) => {
+newsRouter.get("/news", async (req, res) => {
   try {
     const limit = Number(req.query.limit || 5);
     const threshold = Number(req.query.threshold || 0.55);
@@ -55,7 +30,6 @@ app.get("/api/news", async (req, res) => {
     }
 
     const cacheKey = getCacheKey({ limit, threshold });
-
     const cached = await redis.get(cacheKey);
 
     if (cached) {
@@ -67,8 +41,7 @@ app.get("/api/news", async (req, res) => {
 
     const newsBySource = await fetchAllNews(limit);
     const stories = deduplicateStories(newsBySource, threshold);
-
-    let summary = await generateBriefing(stories);
+    const summary = await generateBriefing(stories);
 
     const payload = {
       generatedAt: new Date().toISOString(),
@@ -97,17 +70,4 @@ app.get("/api/news", async (req, res) => {
       message: error.message,
     });
   }
-});
-
-async function startServer() {
-  await connectRedis();
-
-  app.listen(PORT, () => {
-    console.log(`News API running on http://localhost:${PORT}`);
-  });
-}
-
-startServer().catch((error) => {
-  console.error("Failed to start server:", error);
-  process.exit(1);
 });

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { Providers } from "@/components/Providers";
 import "./globals.css";
-import { Providers } from "./providers";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ai-news-briefing-ok98.vercel.app"),
   title: "AI News Briefing",
   description:
     "AI-powered news briefing that aggregates, deduplicates, and summarizes global news.",
