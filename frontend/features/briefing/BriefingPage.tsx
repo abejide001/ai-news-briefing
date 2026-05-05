@@ -7,7 +7,135 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { formatTime, timeAgo } from "@/lib/utils/formatGeneratedAt";
 import { StoryCard } from "./components/StoryCard";
 import { SummaryCard } from "./components/SummaryCard";
-import type { NewsResponse } from "./types";
+import type { NewsResponse, Story } from "./types";
+
+const READ_STORIES_STORAGE_KEY = "ai-news-briefing:read-stories";
+const LOADING_STAGE_DELAY_MS = 1200;
+const TOPICS = [
+  "All",
+  "Politics",
+  "Business",
+  "Climate",
+  "Science",
+  "Sports",
+  "Technology",
+] as const;
+
+type Topic = (typeof TOPICS)[number];
+
+const TOPIC_KEYWORDS: Record<Exclude<Topic, "All">, string[]> = {
+  Politics: [
+    "election",
+    "government",
+    "minister",
+    "president",
+    "parliament",
+    "senate",
+    "congress",
+    "policy",
+    "diplomacy",
+    "war",
+    "ceasefire",
+    "sanction",
+    "court",
+  ],
+  Business: [
+    "business",
+    "market",
+    "stock",
+    "economy",
+    "inflation",
+    "trade",
+    "company",
+    "bank",
+    "earnings",
+    "finance",
+    "investment",
+    "tariff",
+  ],
+  Climate: [
+    "climate",
+    "weather",
+    "warming",
+    "emissions",
+    "carbon",
+    "flood",
+    "wildfire",
+    "storm",
+    "renewable",
+    "environment",
+    "drought",
+  ],
+  Science: [
+    "science",
+    "research",
+    "space",
+    "nasa",
+    "health",
+    "medical",
+    "study",
+    "vaccine",
+    "physics",
+    "biology",
+    "discovery",
+  ],
+  Sports: [
+    "sport",
+    "football",
+    "soccer",
+    "basketball",
+    "tennis",
+    "cricket",
+    "olympic",
+    "match",
+    "league",
+    "championship",
+    "tournament",
+  ],
+  Technology: [
+    "technology",
+    "tech",
+    "software",
+    "startup",
+    "chip",
+    "semiconductor",
+    "cyber",
+    "data",
+    "app",
+    "device",
+    "robot",
+  ],
+};
+
+function getStoryText(story: Story) {
+  return [
+    story.title,
+    ...(story.sources || []),
+    ...(story.links || []).map((link) => link.title),
+    ...(story.links || []).map((link) => link.source),
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+}
+
+function matchesTopic(story: Story, topic: Topic) {
+  if (topic === "All") return true;
+
+  const storyText = getStoryText(story);
+  return TOPIC_KEYWORDS[topic].some((keyword) => {
+    if (keyword.length <= 3) {
+      return new RegExp(`\\b${keyword}\\b`, "i").test(storyText);
+    }
+
+    return storyText.includes(keyword);
+  });
+}
+
+function getStoryId(story: Story) {
+  const linkIds = (story.links || []).map((link) => link.link).join("|");
+  return `${story.title}|${linkIds}`;
+}
 
 export function BriefingPage() {
   const [data, setData] = useState<NewsResponse | null>(null);
@@ -16,11 +144,37 @@ export function BriefingPage() {
   const [refreshCache] = useState(false);
   const [search, setSearch] = useState("");
   const [selectedSource, setSelectedSource] = useState("All");
+  const [selectedTopic, setSelectedTopic] = useState<Topic>("All");
+  const [readStoryIds, setReadStoryIds] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+
+    const storedReadStories = window.localStorage.getItem(
+      READ_STORIES_STORAGE_KEY
+    );
+
+    if (!storedReadStories) return new Set();
+
+    try {
+      const storyIds = JSON.parse(storedReadStories);
+      return Array.isArray(storyIds)
+        ? new Set(storyIds.filter(Boolean))
+        : new Set();
+    } catch {
+      window.localStorage.removeItem(READ_STORIES_STORAGE_KEY);
+      return new Set();
+    }
+  });
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState("Fetching feeds");
   const [error, setError] = useState("");
 
   const fetchNews = useCallback(async () => {
+    const summaryStageTimeout = window.setTimeout(() => {
+      setLoadingMessage("Generating summary");
+    }, LOADING_STAGE_DELAY_MS);
+
     try {
+      setLoadingMessage("Fetching feeds");
       setLoading(true);
       setError("");
 
@@ -50,6 +204,7 @@ export function BriefingPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
+      window.clearTimeout(summaryStageTimeout);
       setLoading(false);
     }
   }, [aiEnabled, limit, refreshCache]);
@@ -76,22 +231,34 @@ export function BriefingPage() {
     return stories.filter((story) => {
       const matchesSource =
         selectedSource === "All" || story.sources?.includes(selectedSource);
+      const matchesSearch = !query || getStoryText(story).includes(query);
 
-      const searchableText = [
-        story.title,
-        ...(story.sources || []),
-        ...(story.links || []).map((link) => link.title),
-        ...(story.links || []).map((link) => link.source),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-
-      const matchesSearch = !query || searchableText.includes(query);
-
-      return matchesSource && matchesSearch;
+      return matchesSource && matchesSearch && matchesTopic(story, selectedTopic);
     });
-  }, [data, selectedSource, search]);
+  }, [data, selectedSource, selectedTopic, search]);
+
+  function toggleReadStory(storyId: string) {
+    setReadStoryIds((currentStoryIds) => {
+      const nextStoryIds = new Set(currentStoryIds);
+
+      if (nextStoryIds.has(storyId)) {
+        nextStoryIds.delete(storyId);
+      } else {
+        nextStoryIds.add(storyId);
+      }
+
+      window.localStorage.setItem(
+        READ_STORIES_STORAGE_KEY,
+        JSON.stringify([...nextStoryIds])
+      );
+
+      return nextStoryIds;
+    });
+  }
+
+  const visibleReadCount = filteredStories.filter((story) =>
+    readStoryIds.has(getStoryId(story))
+  ).length;
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-slate-100 px-4 py-6 text-slate-950 transition-colors dark:bg-[radial-gradient(circle_at_top,_#1e293b,_#020617_45%)] dark:text-white sm:px-6 sm:py-8">
@@ -161,6 +328,28 @@ export function BriefingPage() {
               {loading ? "Loading..." : "Refresh"}
             </button>
           </div>
+
+          <div className="mt-5">
+            <div className="mb-2 text-sm text-slate-600 dark:text-slate-300">
+              Topics
+            </div>
+            <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:pb-0">
+              {TOPICS.map((topic) => (
+                <button
+                  key={topic}
+                  type="button"
+                  onClick={() => setSelectedTopic(topic)}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm transition ${
+                    selectedTopic === topic
+                      ? "bg-slate-950 text-white dark:bg-white dark:text-slate-950"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-950/70 dark:text-slate-300 dark:hover:bg-white/10"
+                  }`}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
         </section>
 
         {error && (
@@ -170,7 +359,7 @@ export function BriefingPage() {
           </div>
         )}
 
-        {loading && <LoadingSkeleton />}
+        {loading && <LoadingSkeleton message={loadingMessage} />}
 
         {data && !loading && (
           <div className="space-y-8">
@@ -182,7 +371,7 @@ export function BriefingPage() {
                   <h2 className="text-2xl font-bold">Story groups</h2>
                   <p className="text-sm text-slate-500 dark:text-slate-400 sm:text-base">
                     {filteredStories.length} of {data.stories?.length || 0}{" "}
-                    stories shown
+                    stories shown · {selectedTopic} · {visibleReadCount} read
                   </p>
                 </div>
 
@@ -209,13 +398,19 @@ export function BriefingPage() {
                 </div>
               ) : (
                 <div className="grid gap-5 lg:grid-cols-2">
-                  {filteredStories.map((story, index) => (
-                    <StoryCard
-                      key={`${story.title}-${index}`}
-                      story={story}
-                      index={index}
-                    />
-                  ))}
+                  {filteredStories.map((story, index) => {
+                    const storyId = getStoryId(story);
+
+                    return (
+                      <StoryCard
+                        key={storyId}
+                        story={story}
+                        index={index}
+                        isRead={readStoryIds.has(storyId)}
+                        onToggleRead={() => toggleReadStory(storyId)}
+                      />
+                    );
+                  })}
                 </div>
               )}
             </section>
