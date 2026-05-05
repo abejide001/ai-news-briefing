@@ -13,7 +13,7 @@ export const NEWS_SOURCES = [
   },
   {
     name: "CNN",
-    feedUrl: "http://rss.cnn.com/rss/edition.rss",
+    feedUrl: "http://rss.cnn.com/rss/cnn_world.rss",
   },
   {
     name: "Al Jazeera",
