@@ -1,21 +1,17 @@
 import { Router } from "express";
-import { generateBriefing } from "../briefing/generateBriefing.js";
-import { redis } from "../lib/redis.js";
-import { deduplicateStories } from "../news/deduplicateStories.js";
-import { fetchAllNews } from "../news/fetchNews.js";
-
-const CACHE_TTL_SECONDS = Number(process.env.CACHE_TTL_SECONDS || 1800);
+import {
+  DEFAULT_DEDUPE_THRESHOLD,
+  DEFAULT_NEWS_LIMIT,
+  generateNewsBriefing,
+} from "../news/generateNewsBriefing.js";
 
 export const newsRouter = Router();
 
-function getCacheKey({ limit, threshold }) {
-  return `news:${limit}:${threshold}`;
-}
-
 newsRouter.get("/news", async (req, res) => {
   try {
-    const limit = Number(req.query.limit || 5);
-    const threshold = Number(req.query.threshold || 0.55);
+    const limit = Number(req.query.limit || DEFAULT_NEWS_LIMIT);
+    const threshold = Number(req.query.threshold || DEFAULT_DEDUPE_THRESHOLD);
+    const refresh = req.query.refresh === "true";
 
     if (!Number.isFinite(limit) || limit < 1 || limit > 20) {
       return res.status(400).json({
@@ -29,36 +25,10 @@ newsRouter.get("/news", async (req, res) => {
       });
     }
 
-    const cacheKey = getCacheKey({ limit, threshold });
-    const cached = await redis.get(cacheKey);
-
-    if (cached) {
-      return res.json({
-        ...JSON.parse(cached),
-        cached: true,
-      });
-    }
-
-    const newsBySource = await fetchAllNews(limit);
-    const stories = deduplicateStories(newsBySource, threshold);
-    const summary = await generateBriefing(stories);
-
-    const payload = {
-      generatedAt: new Date().toISOString(),
-      cached: false,
-      sources: newsBySource.map((source) => ({
-        source: source.source,
-        articleCount: source.articles.length,
-        error: source.error || null,
-      })),
-      totalStories: stories.length,
-      summary,
-      stories,
-      rawSources: newsBySource,
-    };
-
-    await redis.set(cacheKey, JSON.stringify(payload), {
-      EX: CACHE_TTL_SECONDS,
+    const payload = await generateNewsBriefing({
+      limit,
+      threshold,
+      refresh,
     });
 
     res.json(payload);
